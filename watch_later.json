@@ -1,7 +1,9 @@
 {
   "name": "watch_later",
   "description": "Download videos with yt-dlp",
-  "path": "/home/xklimes5/projects/firefox_yt_dlp/watch_later_nm.py",
+  "path": "REPLACE_WITH_ABSOLUTE_PATH_TO/watch_later_nm.py",
   "type": "stdio",
-  "allowed_extensions": ["watch_later_ext@k11m1.eu"]
+  "allowed_extensions": [
+    "watch_later_ext@k11m1.eu"
+  ]
 }

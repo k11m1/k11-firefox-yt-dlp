@@ -23,6 +23,13 @@
             border-bottom: 2px solid #4CAF50;
             padding-bottom: 10px;
         }
+        h2 {
+            font-size: 1.1em;
+            color: #4CAF50;
+            margin: 30px 0 15px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid #eee;
+        }
         .form-group {
             margin-bottom: 20px;
         }
@@ -32,18 +39,31 @@
             font-weight: bold;
             color: #555;
         }
-        input[type="text"] {
+        input[type="text"], select {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
             font-family: monospace;
+            background: white;
         }
-        input[type="text"]:focus {
+        input[type="text"]:focus, select:focus {
             outline: none;
             border-color: #4CAF50;
             box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        .check-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .check-row input {
+            margin-top: 3px;
+        }
+        .check-row label {
+            margin-bottom: 2px;
         }
         .help-text {
             font-size: 0.9em;
@@ -56,6 +76,7 @@
             margin-top: 30px;
             padding-top: 20px;
             border-top: 1px solid #eee;
+            flex-wrap: wrap;
         }
         button {
             padding: 10px 20px;
@@ -65,41 +86,19 @@
             font-weight: bold;
             transition: background 0.2s;
         }
-        #save {
-            background: #4CAF50;
-            color: white;
-        }
-        #save:hover {
-            background: #45a049;
-        }
-        #reset {
-            background: #f0f0f0;
-            color: #333;
-        }
-        #reset:hover {
-            background: #e0e0e0;
-        }
+        #save { background: #4CAF50; color: white; }
+        #save:hover { background: #45a049; }
+        #reset, #export, #importBtn { background: #f0f0f0; color: #333; }
+        #reset:hover, #export:hover, #importBtn:hover { background: #e0e0e0; }
         #status {
             margin-top: 15px;
             padding: 10px;
             border-radius: 4px;
             display: none;
         }
-        .success {
-            background: #dff0d8;
-            color: #3c763d;
-            border: 1px solid #d6e9c6;
-        }
-        .error {
-            background: #f2dede;
-            color: #a94442;
-            border: 1px solid #ebccd1;
-        }
-        .warning {
-            background: #fcf8e3;
-            color: #8a6d3b;
-            border: 1px solid #faebcc;
-        }
+        .success { background: #dff0d8; color: #3c763d; border: 1px solid #d6e9c6; }
+        .error   { background: #f2dede; color: #a94442; border: 1px solid #ebccd1; }
+        .warning { background: #fcf8e3; color: #8a6d3b; border: 1px solid #faebcc; }
         .path-hint {
             font-family: monospace;
             background: #f8f9fa;
@@ -107,65 +106,129 @@
             border-radius: 3px;
             margin: 5px 0;
         }
+        .inherit-note {
+            font-size: 0.85em;
+            color: #888;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Watch Later Downloader Settings</h1>
-        
+
+        <p class="inherit-note">
+            Leave a field empty to inherit the machine's own default, shown greyed
+            out inside the box. Defaults are read live from the downloader, so they
+            stay correct even if the machine's configuration changes.
+        </p>
+
+        <h2>General</h2>
+
         <div class="form-group">
-            <label for="videoPath">Video Download Directory</label>
-            <input type="text" id="videoPath" placeholder="Leave empty for default: ~/watch_later_smaz">
+            <label for="defaultMode">Toolbar button</label>
+            <select id="defaultMode">
+                <option value="ask">Ask each time (show the chooser)</option>
+                <option value="audio">Always download audio</option>
+                <option value="video">Always download video</option>
+            </select>
             <div class="help-text">
-                Where to save video downloads. Use absolute path or leave empty for default.
-                <div class="path-hint">Default: ~/watch_later_smaz</div>
+                Picking audio or video makes the toolbar button download in one
+                click. The right-click menu always offers both.
             </div>
         </div>
-        
-        <div class="form-group">
-            <label for="audioPath">Audio Download Directory</label>
-            <input type="text" id="audioPath" placeholder="Leave empty to use same as video directory">
-            <div class="help-text">
-                Where to save audio downloads. If empty, uses the video directory.
-                <div class="path-hint">Example: ~/Music/watch_later</div>
+
+        <div class="check-row">
+            <input type="checkbox" id="notifications">
+            <div>
+                <label for="notifications">Desktop notifications</label>
+                <div class="help-text">Notify when a download starts, finishes or fails.</div>
             </div>
         </div>
-        
-        <div class="form-group">
-            <label for="videoQuality">Video Quality</label>
-            <input type="text" id="videoQuality" placeholder="bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]">
-            <div class="help-text">
-                yt-dlp format selector for videos. Leave as default unless you know what you're doing.
-                <div class="path-hint">Default: bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]</div>
+
+        <div class="check-row">
+            <input type="checkbox" id="archive">
+            <div>
+                <label for="archive">Skip already-downloaded items</label>
+                <div class="help-text">
+                    Records each download in <span class="path-hint">.archive.txt</span>
+                    so re-running a playlist fetches only what is new.
+                </div>
             </div>
         </div>
-        
+
         <div class="form-group">
-            <label for="audioFormat">Audio Format</label>
-            <input type="text" id="audioFormat" placeholder="opus">
+            <label for="extraArgs">Extra yt-dlp arguments</label>
+            <input type="text" id="extraArgs" placeholder="--limit-rate 2M --cookies-from-browser firefox">
             <div class="help-text">
-                Audio format for music downloads (opus, mp3, m4a, etc.)
-                <div class="path-hint">Default: opus</div>
+                Appended last, so these override everything above. Split like a
+                shell command line but never run through a shell.
             </div>
         </div>
-        
+
+        <h2>Audio</h2>
+
         <div class="form-group">
-            <label for="audioQuality">Audio Quality</label>
-            <input type="text" id="audioQuality" placeholder="0">
+            <label for="audioPath">Download directory</label>
+            <input type="text" id="audioPath">
+            <div class="help-text">Absolute path. <span class="path-hint">~</span> is expanded.</div>
+        </div>
+
+        <div class="form-group">
+            <label for="audioFormat">Format</label>
+            <input type="text" id="audioFormat">
             <div class="help-text">
-                Audio quality (0=best, 9=worst for Opus/MP3; 128k, 192k, etc. for other codecs)
-                <div class="path-hint">Default: 0 (best)</div>
+                <span class="path-hint">best</span> keeps whatever the site already
+                serves and avoids a re-encode. Naming a codec (mp3, opus, m4a,
+                flac) forces a conversion.
             </div>
         </div>
-        
+
+        <div class="form-group">
+            <label for="audioQuality">Quality</label>
+            <input type="text" id="audioQuality">
+            <div class="help-text">0 (best) to 9 (worst), or a bitrate such as 192k.</div>
+        </div>
+
+        <div class="form-group">
+            <label for="audioTemplate">Output template</label>
+            <input type="text" id="audioTemplate">
+            <div class="help-text">yt-dlp output template. Leave empty unless you have a reason.</div>
+        </div>
+
+        <h2>Video</h2>
+
+        <div class="form-group">
+            <label for="videoPath">Download directory</label>
+            <input type="text" id="videoPath">
+            <div class="help-text">Absolute path. <span class="path-hint">~</span> is expanded.</div>
+        </div>
+
+        <div class="form-group">
+            <label for="videoQuality">Format selector</label>
+            <input type="text" id="videoQuality">
+            <div class="help-text">yt-dlp <span class="path-hint">-f</span> selector.</div>
+        </div>
+
+        <div class="form-group">
+            <label for="videoTemplate">Output template</label>
+            <input type="text" id="videoTemplate">
+            <div class="help-text">yt-dlp output template. Leave empty unless you have a reason.</div>
+        </div>
+
         <div class="button-group">
             <button id="save">Save Settings</button>
             <button id="reset">Reset to Defaults</button>
+            <button id="export">Export JSON</button>
+            <button id="importBtn">Import JSON</button>
+            <input type="file" id="importFile" accept="application/json,.json" hidden>
         </div>
-        
+
         <div id="status"></div>
     </div>
-    
+
+    <script src="defaults.js"></script>
     <script src="options.js"></script>
 </body>
 </html>
