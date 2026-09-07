@@ -56,6 +56,7 @@ DEFAULTS = {
         "best[height<=1080][ext=mp4]",
     ),
     "archive": True,
+    "playlist": False,
     "notifications": True,
     "extraArgs": "",
 }
@@ -168,6 +169,12 @@ def build_argv(url, mode, settings):
         argv += BUILTIN_ARGS[mode]
 
     argv += ["--paths", str(dest)]
+
+    # A YouTube watch URL carrying &list= (a Mix or autoplay radio) otherwise
+    # drags in the entire, often endless, list -- one click produced 22 unwanted
+    # tracks. --no-playlist only disambiguates such URLs; a genuine playlist URL
+    # still downloads in full, so this is safe as the default.
+    argv += ["--yes-playlist"] if settings.get("playlist") else ["--no-playlist"]
 
     if audio:
         fmt = (settings.get("audioFormat") or DEFAULTS["audioFormat"]).strip()

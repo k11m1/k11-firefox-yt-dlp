@@ -6,7 +6,7 @@
     <style>
         body {
             font-family: sans-serif;
-            width: 250px;
+            width: 270px;
             margin: 0;
             padding: 15px;
             background: #f8f9fa;
@@ -70,6 +70,47 @@
         #audioBtn:hover {
             background: linear-gradient(to right, #1976D2, #1565C0);
         }
+        /* Playlist variants are deliberately quieter than the single-item
+           buttons: grabbing one track is the common case, and a stray click on
+           a YouTube Mix pulls down dozens of unrelated files. */
+        .playlist-btn {
+            padding: 8px;
+            font-size: 12px;
+            font-weight: normal;
+            background: #fff;
+            border: 1px solid #ccc;
+            color: #555;
+        }
+        .playlist-btn:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+        .btn-pair {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        /* .download-btn sets display:flex, which would otherwise beat the
+           user-agent rule for [hidden] and leave hidden buttons visible. */
+        [hidden] {
+            display: none !important;
+        }
+        /* A YouTube Mix is auto-generated and never ends, so it gets a warning
+           colour rather than the neutral playlist styling. */
+        .mix-btn {
+            background: #fcf8e3;
+            border-color: #faebcc;
+            color: #8a6d3b;
+        }
+        .mix-btn:hover {
+            background: #f9f0d4;
+            border-color: #e6d5a8;
+        }
+        .download-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+            transform: none;
+        }
         .icon {
             font-size: 16px;
         }
@@ -123,14 +164,24 @@
         </div>
         
         <div id="buttonGroup" class="button-group" style="display: none;">
-            <button id="videoBtn" class="download-btn">
-                <span class="icon">▶️</span>
-                Download Video
-            </button>
-            <button id="audioBtn" class="download-btn">
-                <span class="icon">🎵</span>
-                Download Audio
-            </button>
+            <div class="btn-pair">
+                <button id="audioBtn" class="download-btn">
+                    <span class="icon">🎵</span>
+                    Music
+                </button>
+                <button id="audioPlaylistBtn" class="download-btn playlist-btn">
+                    Music — whole playlist
+                </button>
+            </div>
+            <div class="btn-pair">
+                <button id="videoBtn" class="download-btn">
+                    <span class="icon">▶️</span>
+                    Video
+                </button>
+                <button id="videoPlaylistBtn" class="download-btn playlist-btn">
+                    Video — whole playlist
+                </button>
+            </div>
         </div>
         
         <div id="status" class="status"></div>

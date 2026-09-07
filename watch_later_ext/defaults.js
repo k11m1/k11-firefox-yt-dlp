@@ -15,6 +15,8 @@ const WL_DEFAULTS = {
   defaultMode: "ask", // "ask" shows the chooser; "audio"/"video" download at once
   notifications: true,
   archive: true, // skip anything already recorded in the download archive
+  // playlist is deliberately not stored: it is chosen per click, by which
+  // button or menu entry you use, so it can never be left switched on.
   extraArgs: "", // raw yt-dlp arguments, appended last
 
   // Audio

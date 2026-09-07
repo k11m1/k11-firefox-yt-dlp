@@ -10,9 +10,15 @@
 
 const HOST = "watch_later";
 
+const MENU_PARENT = "wl-parent";
+
+// Single-item entries come first, because grabbing one track is the common case
+// and following a YouTube Mix by accident drags in dozens of unrelated files.
 const MENUS = [
-  { id: "wl-audio", title: "Download audio with yt-dlp", mode: "audio" },
-  { id: "wl-video", title: "Download video with yt-dlp", mode: "video" },
+  { id: "wl-audio", title: "Music", mode: "audio", playlist: false },
+  { id: "wl-audio-list", title: "Music — whole playlist", mode: "audio", playlist: true },
+  { id: "wl-video", title: "Video", mode: "video", playlist: false },
+  { id: "wl-video-list", title: "Video — whole playlist", mode: "video", playlist: true },
 ];
 
 function sendToHost(message) {
@@ -34,7 +40,11 @@ function sendToHost(message) {
 
     port.onMessage.addListener((response) => finish(resolve, response));
     port.onDisconnect.addListener(() => {
-      const error = browser.runtime.lastError;
+      // Firefox reports a port failure on port.error. runtime.lastError is the
+      // Chrome idiom and is not populated here, so reading only that turned a
+      // perfectly clear "No such native application watch_later" into a
+      // useless generic message.
+      const error = port.error || browser.runtime.lastError;
       finish(
         reject,
         new Error(
@@ -63,12 +73,17 @@ function notify(message, title = "Watch Later Downloader") {
     .catch((error) => console.warn("watch-later: notification failed", error));
 }
 
-async function startDownload(url, mode) {
+async function startDownload(url, mode, playlist = false) {
   if (!url || !/^https?:\/\//i.test(url)) {
     throw new Error("No downloadable URL here (needs http or https)");
   }
 
   const settings = await wlLoadSettings();
+  // Always explicit, never remembered. Whether a playlist is followed is
+  // decided by which button or menu entry was used, so it cannot be left
+  // switched on from some earlier download.
+  settings.playlist = Boolean(playlist);
+
   const response = await sendToHost({
     action: "download",
     url,
@@ -101,7 +116,7 @@ browser.action.onClicked.addListener(async (tab) => {
   const { defaultMode } = await wlLoadSettings();
   if (defaultMode === "ask") return; // the popup is handling it
   try {
-    await startDownload(tab && tab.url, defaultMode);
+    await startDownload(tab && tab.url, defaultMode, false);
   } catch (error) {
     await notify(error.message, "Download failed");
   }
@@ -111,14 +126,22 @@ browser.action.onClicked.addListener(async (tab) => {
 
 // removeAll first: an event page can be restarted, and creating a menu with an
 // id that already exists throws.
+const MENU_CONTEXTS = ["link", "page", "video", "audio"];
+
 browser.menus
   .removeAll()
   .then(() => {
+    browser.menus.create({
+      id: MENU_PARENT,
+      title: "Download with yt-dlp",
+      contexts: MENU_CONTEXTS,
+    });
     for (const { id, title } of MENUS) {
       browser.menus.create({
         id,
         title,
-        contexts: ["link", "page", "video", "audio"],
+        parentId: MENU_PARENT,
+        contexts: MENU_CONTEXTS,
       });
     }
   })
@@ -132,7 +155,7 @@ browser.menus.onClicked.addListener(async (info, tab) => {
   // opening it.
   const url = info.linkUrl || info.srcUrl || info.pageUrl || (tab && tab.url);
   try {
-    await startDownload(url, entry.mode);
+    await startDownload(url, entry.mode, entry.playlist);
   } catch (error) {
     await notify(error.message, "Download failed");
   }
@@ -144,7 +167,7 @@ browser.runtime.onMessage.addListener((message) => {
   if (!message || typeof message !== "object") return false;
 
   if (message.kind === "download") {
-    return startDownload(message.url, message.mode)
+    return startDownload(message.url, message.mode, message.playlist)
       .then((response) => ({ ok: true, response }))
       .catch((error) => ({ ok: false, error: error.message }));
   }
