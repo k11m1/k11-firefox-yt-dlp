@@ -78,6 +78,26 @@ Optional environment variables override the built-in defaults:
 
 ## Troubleshooting
 
+### Changes to the host do not take effect
+
+**Restart Firefox completely.** The native-messaging manifest embeds the host's
+absolute path, so with the Nix module a new host means a new manifest *and* a
+new Firefox wrapper. Firefox reads `MOZ_SYSTEM_DIR` once, at process start, so a
+running instance keeps launching whatever it captured then -- and will silently
+go on using the previous host. Reloading the extension does not help.
+
+Check which host the running Firefox would actually launch:
+
+```bash
+readlink -f /run/current-system/sw/bin/firefox
+tr '\0' '\n' < /proc/$(pgrep -f '/lib/firefox/firefox' | head -1)/environ | grep MOZ_SYSTEM_DIR
+```
+
+If those name different store paths, the restart has not happened yet and any
+test result is meaningless.
+
+### Downloads
+
 Downloads are ordinary systemd user units:
 
 ```bash

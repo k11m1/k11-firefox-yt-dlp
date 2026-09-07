@@ -34,7 +34,12 @@
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "watch_later_ext@k11m1.eu"
+      "id": "watch_later_ext@k11m1.eu",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     }
   }
 }
