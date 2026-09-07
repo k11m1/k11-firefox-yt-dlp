@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Watch Later Downloader</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            width: 250px;
+            margin: 0;
+            padding: 15px;
+            background: #f8f9fa;
+        }
+        .container {
+            text-align: center;
+        }
+        h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 16px;
+        }
+        .url-display {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 15px;
+            font-size: 12px;
+            word-break: break-all;
+            text-align: left;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .download-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: transform 0.1s, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .download-btn:hover {
+            transform: translateY(-1px);
+        }
+        .download-btn:active {
+            transform: translateY(1px);
+        }
+        #videoBtn {
+            background: linear-gradient(to right, #4CAF50, #45a049);
+            color: white;
+        }
+        #videoBtn:hover {
+            background: linear-gradient(to right, #45a049, #3d8b40);
+        }
+        #audioBtn {
+            background: linear-gradient(to right, #2196F3, #1976D2);
+            color: white;
+        }
+        #audioBtn:hover {
+            background: linear-gradient(to right, #1976D2, #1565C0);
+        }
+        .icon {
+            font-size: 16px;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            display: none;
+        }
+        .success {
+            background: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        .error {
+            background: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+        .loading {
+            background: #fcf8e3;
+            color: #8a6d3b;
+            border: 1px solid #faebcc;
+        }
+        .settings-link {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #666;
+        }
+        .settings-link a {
+            color: #2196F3;
+            text-decoration: none;
+        }
+        .settings-link a:hover {
+            text-decoration: underline;
+        }
+        .no-url {
+            color: #999;
+            font-style: italic;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Watch Later Downloader</h2>
+        
+        <div id="urlDisplay" class="url-display">
+            <span id="urlText" class="no-url">No URL available</span>
+        </div>
+        
+        <div id="buttonGroup" class="button-group" style="display: none;">
+            <button id="videoBtn" class="download-btn">
+                <span class="icon">▶️</span>
+                Download Video
+            </button>
+            <button id="audioBtn" class="download-btn">
+                <span class="icon">🎵</span>
+                Download Audio
+            </button>
+        </div>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="settings-link">
+            <a href="#" id="settingsLink">Settings</a>
+        </div>
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>

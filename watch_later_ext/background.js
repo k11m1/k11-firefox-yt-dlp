@@ -1,45 +1,33 @@
-// Listen for toolbar button click
-browser.action.onClicked.addListener(async (tab) => {
-    if (!tab.url) return;
-
+// Load settings from storage (for popup or other uses)
+async function loadSettings() {
     try {
-        // Debug: log that the click handler ran
-        console.log("background: action clicked", { id: tab.id, url: tab.url });
-
-        // Connect to native messaging host
-        const port = browser.runtime.connectNative("watch_later");
-        try {
-            port.postMessage({ url: tab.url });
-        } catch (e) {
-            console.error("background: failed to postMessage to native host", e);
-        }
-
-        port.onMessage.addListener((response) => {
-            console.log("background: Response from native host:", response);
-        });
-
-        port.onDisconnect.addListener(() => {
-            if (browser.runtime.lastError) {
-                console.error("background: native host error:", browser.runtime.lastError);
-            } else {
-                console.log("background: native port disconnected");
-            }
-        });
-
-        // Optional: notify user (may require permissions)
-        try {
-            browser.notifications.create({
-                "type": "basic",
-                "iconUrl": browser.runtime.getURL("icon-48.png"),
-                "title": "Watch Later Downloader",
-                "message": "Sent URL to native downloader."
-            });
-        } catch (e) {
-            // Don't block operation if notifications fail
-            console.warn("background: notifications unavailable", e);
-        }
+        const settings = await browser.storage.local.get([
+            'videoPath',
+            'audioPath', 
+            'videoQuality',
+            'audioFormat',
+            'audioQuality'
+        ]);
+        
+        // Set defaults if not present
+        return {
+            videoPath: settings.videoPath || '',
+            audioPath: settings.audioPath || '',
+            videoQuality: settings.videoQuality || 'bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]',
+            audioFormat: settings.audioFormat || 'opus',
+            audioQuality: settings.audioQuality || '0'
+        };
     } catch (error) {
-        console.error("background: Failed to send URL:", error);
+        console.error('Failed to load settings:', error);
+        return {};
+    }
+}
+
+// Listen for settings updates from options page
+browser.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if (message.type === 'settingsUpdated') {
+        console.log('Settings updated in background:', message.settings);
+        // We could broadcast this to popup if needed
     }
 });
 

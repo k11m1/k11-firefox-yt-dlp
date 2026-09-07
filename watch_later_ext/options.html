@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Watch Later Downloader Settings</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+        .help-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        #save {
+            background: #4CAF50;
+            color: white;
+        }
+        #save:hover {
+            background: #45a049;
+        }
+        #reset {
+            background: #f0f0f0;
+            color: #333;
+        }
+        #reset:hover {
+            background: #e0e0e0;
+        }
+        #status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        .error {
+            background: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+        .warning {
+            background: #fcf8e3;
+            color: #8a6d3b;
+            border: 1px solid #faebcc;
+        }
+        .path-hint {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 5px;
+            border-radius: 3px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Watch Later Downloader Settings</h1>
+        
+        <div class="form-group">
+            <label for="videoPath">Video Download Directory</label>
+            <input type="text" id="videoPath" placeholder="Leave empty for default: ~/watch_later_smaz">
+            <div class="help-text">
+                Where to save video downloads. Use absolute path or leave empty for default.
+                <div class="path-hint">Default: ~/watch_later_smaz</div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="audioPath">Audio Download Directory</label>
+            <input type="text" id="audioPath" placeholder="Leave empty to use same as video directory">
+            <div class="help-text">
+                Where to save audio downloads. If empty, uses the video directory.
+                <div class="path-hint">Example: ~/Music/watch_later</div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="videoQuality">Video Quality</label>
+            <input type="text" id="videoQuality" placeholder="bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]">
+            <div class="help-text">
+                yt-dlp format selector for videos. Leave as default unless you know what you're doing.
+                <div class="path-hint">Default: bestvideo[height<=1080][ext=mp4]+bestaudio[ext=m4a]/best[height<=1080][ext=mp4]</div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="audioFormat">Audio Format</label>
+            <input type="text" id="audioFormat" placeholder="opus">
+            <div class="help-text">
+                Audio format for music downloads (opus, mp3, m4a, etc.)
+                <div class="path-hint">Default: opus</div>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="audioQuality">Audio Quality</label>
+            <input type="text" id="audioQuality" placeholder="0">
+            <div class="help-text">
+                Audio quality (0=best, 9=worst for Opus/MP3; 128k, 192k, etc. for other codecs)
+                <div class="path-hint">Default: 0 (best)</div>
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button id="save">Save Settings</button>
+            <button id="reset">Reset to Defaults</button>
+        </div>
+        
+        <div id="status"></div>
+    </div>
+    
+    <script src="options.js"></script>
+</body>
+</html>

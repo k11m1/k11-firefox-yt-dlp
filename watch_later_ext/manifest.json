@@ -1,40 +1,40 @@
 {
   "manifest_version": 3,
   "name": "Watch Later Downloader",
-  "version": "1.0",
-  "description": "Send current URL to yt-dlp",
+  "version": "1.2",
+  "description": "Send current URL to yt-dlp with choice of video or audio download.",
   "icons": {
     "16": "icon-16.png",
     "48": "icon-48.png",
     "128": "icon-128.png"
   },
-  "data_collection_permissions": {
-    "required": ["none"],
-    "collects_personal_data": false,
-    "collects_usage_data": false,
-    "collects_advertising_data": false
+  "permissions": [
+    "nativeMessaging",
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
   },
-  "permissions": ["nativeMessaging", "activeTab"],
   "action": {
-    "default_title": "Download Video",
+    "default_title": "Watch Later Downloader",
     "default_icon": {
       "48": "icon-48.png"
-    }
+    },
+    "default_popup": "popup.html"
   },
   "background": {
-    "scripts": ["background.js"]
+    "scripts": [
+      "background.js"
+    ]
   },
   "browser_specific_settings": {
     "gecko": {
       "id": "watch_later_ext@k11m1.eu"
-      ,
-      "data_collection_permissions": {
-        "required": ["none"],
-        "collects_personal_data": false,
-        "collects_usage_data": false,
-        "collects_advertising_data": false
-      }
     }
   }
 }
-
