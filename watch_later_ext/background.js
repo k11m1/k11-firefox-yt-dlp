@@ -73,7 +73,7 @@ function notify(message, title = "Watch Later Downloader") {
     .catch((error) => console.warn("watch-later: notification failed", error));
 }
 
-async function startDownload(url, mode, playlist = false) {
+async function startDownload(url, mode, playlist = false, title = "") {
   if (!url || !/^https?:\/\//i.test(url)) {
     throw new Error("No downloadable URL here (needs http or https)");
   }
@@ -88,6 +88,9 @@ async function startDownload(url, mode, playlist = false) {
     action: "download",
     url,
     type: mode,
+    // The page title is what the host puts in its notifications: on a video
+    // site that is the track name, which beats showing a raw URL.
+    title: title || "",
     settings,
   });
 
@@ -116,7 +119,7 @@ browser.action.onClicked.addListener(async (tab) => {
   const { defaultMode } = await wlLoadSettings();
   if (defaultMode === "ask") return; // the popup is handling it
   try {
-    await startDownload(tab && tab.url, defaultMode, false);
+    await startDownload(tab && tab.url, defaultMode, false, tab && tab.title);
   } catch (error) {
     await notify(error.message, "Download failed");
   }
@@ -155,7 +158,10 @@ browser.menus.onClicked.addListener(async (info, tab) => {
   // opening it.
   const url = info.linkUrl || info.srcUrl || info.pageUrl || (tab && tab.url);
   try {
-    await startDownload(url, entry.mode, entry.playlist);
+    // On a link the page title describes the wrong thing, so prefer the link
+    // text; fall back to the page title when the click was on the page itself.
+    const label = info.linkUrl ? info.linkText : tab && tab.title;
+    await startDownload(url, entry.mode, entry.playlist, label);
   } catch (error) {
     await notify(error.message, "Download failed");
   }
@@ -167,7 +173,7 @@ browser.runtime.onMessage.addListener((message) => {
   if (!message || typeof message !== "object") return false;
 
   if (message.kind === "download") {
-    return startDownload(message.url, message.mode, message.playlist)
+    return startDownload(message.url, message.mode, message.playlist, message.title)
       .then((response) => ({ ok: true, response }))
       .catch((error) => ({ ok: false, error: error.message }));
   }

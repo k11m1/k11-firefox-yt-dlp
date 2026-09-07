@@ -106,6 +106,18 @@
             background: #f9f0d4;
             border-color: #e6d5a8;
         }
+        /* Armed state: unmistakably different from the resting button, so a
+           second click is always a deliberate one. */
+        .confirm-btn, .confirm-btn.mix-btn {
+            background: #d9534f;
+            border-color: #d43f3a;
+            color: #fff;
+            font-weight: bold;
+        }
+        .confirm-btn:hover, .confirm-btn.mix-btn:hover {
+            background: #c9302c;
+            border-color: #ac2925;
+        }
         .download-btn:disabled {
             opacity: 0.5;
             cursor: default;

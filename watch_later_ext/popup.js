@@ -28,9 +28,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
   for (const [id, mode, playlist] of BUTTONS) {
-    document
-      .getElementById(id)
-      .addEventListener("click", () => startDownload(mode, playlist));
+    document.getElementById(id).addEventListener("click", () => {
+      if (!playlist) {
+        disarm();
+        startDownload(mode, false);
+        return;
+      }
+      if (armedId === id) {
+        disarm();
+        startDownload(mode, true);
+        return;
+      }
+      arm(id);
+    });
   }
   document.getElementById("settingsLink").addEventListener("click", (event) => {
     event.preventDefault();
@@ -61,8 +71,50 @@ function playlistInfo(url) {
   };
 }
 
+// A playlist download is the one click here that can cost you hundreds of
+// files, so it takes two: the first arms the button, the second commits. It
+// disarms itself after a few seconds, and any other button disarms it too.
+const ARM_TIMEOUT_MS = 5000;
+
+let armedId = null;
+let armedTimer = null;
+let armedLabel = "";
+
+function disarm() {
+  if (!armedId) return;
+  const button = document.getElementById(armedId);
+  if (button) {
+    button.textContent = armedLabel;
+    button.classList.remove("confirm-btn");
+  }
+  clearTimeout(armedTimer);
+  armedId = null;
+  armedTimer = null;
+  armedLabel = "";
+  hideStatus();
+}
+
+function arm(id) {
+  disarm();
+  const button = document.getElementById(id);
+  armedId = id;
+  armedLabel = button.textContent;
+  button.textContent = "Click again to confirm";
+  button.classList.add("confirm-btn");
+  showStatus(
+    currentPlaylist && currentPlaylist.mix
+      ? "A Mix is generated endlessly — this can run to hundreds of tracks."
+      : "This downloads every item in the playlist.",
+    "loading",
+  );
+  armedTimer = setTimeout(disarm, ARM_TIMEOUT_MS);
+}
+
+let currentPlaylist = null;
+
 function applyPlaylistButtons(url) {
   const info = playlistInfo(url);
+  currentPlaylist = info;
   for (const [id, mode, playlist] of BUTTONS) {
     const button = document.getElementById(id);
 
@@ -106,12 +158,14 @@ async function startDownload(mode, playlist) {
   try {
     const tabs = await browser.tabs.query({ active: true, currentWindow: true });
     const url = tabs[0] && tabs[0].url;
+    const title = tabs[0] && tabs[0].title;
 
     const reply = await browser.runtime.sendMessage({
       kind: "download",
       url,
       mode,
       playlist: Boolean(playlist),
+      title,
     });
 
     // Every branch from here ends in a status change. 1.2 left this line
@@ -125,11 +179,15 @@ async function startDownload(mode, playlist) {
 
     const { status, dest } = reply.response;
     if (status === "already_downloaded") {
-      showStatus("Already downloaded — nothing new to fetch", "success");
+      showStatus("You already have this one.", "success");
     } else {
+      // Short, and names the folder rather than the whole absolute path --
+      // the popup is 270px wide and the full path wrapped to three lines.
+      const folder = dest ? dest.replace(/^.*\/(?=[^/]+\/[^/]+$)/, "") : "";
       showStatus(
-        `Running in the background${dest ? ` → ${dest}` : ""}. ` +
-          "You will get a notification when it finishes.",
+        (playlist ? "Playlist started" : "Started") +
+          (folder ? ` → ${folder}` : "") +
+          ". You'll get a notification when it's done.",
         "success",
       );
     }
@@ -138,6 +196,11 @@ async function startDownload(mode, playlist) {
     showStatus(error.message, "error");
     setButtonsEnabled(true);
   }
+}
+
+function hideStatus() {
+  const status = document.getElementById("status");
+  status.style.display = "none";
 }
 
 function showStatus(message, type) {

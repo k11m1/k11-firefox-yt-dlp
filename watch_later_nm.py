@@ -119,11 +119,19 @@ def send_message(obj):
 
 
 def notify(summary, body=""):
+    """Show a desktop notification.
+
+    The app name goes in -a, not the summary: the summary is the notification's
+    headline, and spending it on a constant string buries the part that matters
+    ("Music saved") in the body text.
+    """
     if not NOTIFY:
         return
-    text = f"{summary}\n{body}" if body else summary
     try:
-        subprocess.run([NOTIFY, "Watch Later Downloader", text], check=False)
+        subprocess.run(
+            [NOTIFY, "-a", "Watch Later Downloader", summary, body],
+            check=False,
+        )
     except Exception:
         pass
 
@@ -208,7 +216,7 @@ def build_argv(url, mode, settings):
 
 # --- Detached worker -------------------------------------------------------
 
-def spawn(argv, dest, mode, notifications):
+def spawn(argv, dest, mode, notifications, label):
     """Run the download in a transient systemd user unit.
 
     Falls back to a plain detached process where systemd is not available.
@@ -218,6 +226,7 @@ def spawn(argv, dest, mode, notifications):
         "mode": mode,
         "dest": str(dest),
         "notifications": bool(notifications),
+        "label": label,
     })
 
     unit = f"watch-later-{uuid.uuid4().hex[:12]}"
@@ -266,6 +275,8 @@ def run_worker(payload):
     argv = job["argv"]
     mode = job["mode"]
     notifications = job.get("notifications", True)
+    label = job.get("label") or ""
+    kind = "Music" if mode == "audio" else "Video"
 
     def tell(summary, body=""):
         if notifications:
@@ -274,25 +285,29 @@ def run_worker(payload):
     try:
         proc = subprocess.run(argv, capture_output=True, text=True)
     except Exception as exc:
-        tell(f"{mode.capitalize()} download failed", str(exc))
+        tell(f"{kind} download failed", str(exc))
         return 1
 
     if proc.returncode != 0:
         lines = [line for line in (proc.stderr or "").splitlines() if line.strip()]
-        tell(f"{mode.capitalize()} download failed", lines[-1] if lines else f"yt-dlp exit {proc.returncode}")
+        detail = lines[-1] if lines else f"yt-dlp exit {proc.returncode}"
+        tell(f"{kind} download failed", f"{label}\n{detail}" if label else detail)
         return proc.returncode
 
     printed = [line for line in (proc.stdout or "").splitlines() if line.strip()]
     if not printed:
         # Exit 0 with nothing printed means every requested item was already
         # recorded in the download archive.
-        tell("Already downloaded", "Nothing new to fetch.")
+        tell("Already have it", label or "Nothing new to fetch.")
         return 0
 
     if len(printed) == 1:
-        tell("Download finished", Path(printed[0]).name)
+        # The filename is better than the page title here: it is what actually
+        # landed on disk, after yt-dlp's own metadata and sanitising.
+        tell(f"{kind} saved", Path(printed[0]).stem)
     else:
-        tell("Download finished", f"{len(printed)} files")
+        folder = Path(printed[0]).parent.name or Path(job["dest"]).name
+        tell(f"{len(printed)} tracks saved", folder)
     return 0
 
 
@@ -327,10 +342,13 @@ def handle(msg):
         return {"status": "error", "reason": f"cannot use download directory: {exc}"}
 
     notifications = settings.get("notifications", DEFAULTS["notifications"])
-    unit = spawn(argv, dest, mode, notifications)
+    # The extension sends the page title, which on a video site is the track
+    # name. Far more use in a notification than the raw URL.
+    label = (msg.get("title") or "").strip() or url
+    unit = spawn(argv, dest, mode, notifications, label)
 
     if notifications:
-        notify(f"Starting {mode} download", url)
+        notify("Downloading music" if mode == "audio" else "Downloading video", label)
 
     return {"status": "started", "mode": mode, "dest": str(dest), "unit": unit}
 
